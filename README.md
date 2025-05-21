@@ -16,3 +16,12 @@ python manage.py migrate
 python manage.py runserver
 ```
 4. Доступно по адресу 127.0.0.1:8000
+
+Запуск бекенда через docker compose:
+1. Установить docker
+2. 
+```
+cd backend
+docker-compose up --build
+```
+3. Доступно по адресу 127.0.0.1:8000
