@@ -1,0 +1,49 @@
+.header {
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 22px;
+    padding: 20px;
+}
+
+.nav a {
+    text-decoration: none;
+    color: black;
+}
+
+.logo {
+    width: 77px;
+}
+
+.nav__sections {
+    display: flex;
+    align-items: center;
+    gap: 59px;
+}
+
+.nav__sections_active {
+    padding: 5px 8px;
+    border-radius: 12px;
+    background: #000;
+    color: #ffffff !important;
+}
+
+.nav__auth {
+    display: flex;
+    gap: 10px;
+}
+
+.nav__auth a{
+    padding: 3px 10px;
+    border-radius: 43px;
+    border: 1px solid #000;
+}
+
+.nav__auth a:hover {
+    background: rgb(208, 208, 208);
+}
