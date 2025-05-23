@@ -30,9 +30,11 @@ INSTALLED_APPS = [
     'api.apps.ApiConfig',
     'rest_framework',
     'djoser',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -129,8 +131,22 @@ REST_FRAMEWORK = {
 
 
 SIMPLE_JWT = {
-    # Устанавливаем срок жизни токена
    'ACCESS_TOKEN_LIFETIME': timedelta(weeks=1),
    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 AUTH_USER_MODEL = 'users.User'
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://frontend:3000",   
+]
+
+DJOSER = {
+    "LOGIN_FIELD": "email",
+    "USER_CREATE_PASSWORD_RETYPE": False, # Если True, то нужно еще re_password передавать
+    "SERIALIZERS": {
+        "user_create": "users.serializers.UserCreateSerializer",
+        "user": "users.serializers.UserSerializer",
+        "current_user": "users.serializers.UserSerializer",
+    },
+}
