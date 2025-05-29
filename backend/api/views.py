@@ -27,13 +27,19 @@ class OrganizationAPIView(views.APIView):
             organization = Organization.objects.get(owner=request.user)
             serializer = OrganizationSerializer(organization,
                                                 data=request.data,
-                                                partial=True)
+                                                partial=True,
+                                                context={'request': request})
             if serializer.is_valid():
                 organization = serializer.save()
                 return Response(OrganizationSerializer(organization).data)
-            return Response(serializer.errors, status=400)
         except Organization.DoesNotExist:
-            return Response({'error': 'Organization not found'}, status=404)
+            serializer = OrganizationSerializer(data=request.data,
+                                                context={'request': request})
+            if serializer.is_valid():
+                organization = serializer.save()
+                return Response(OrganizationSerializer(organization).data, status=201)
+        return Response(serializer.errors, status=400)
+
 
 
 class OrganizationListAPIView(views.APIView):

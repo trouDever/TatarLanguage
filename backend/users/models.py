@@ -22,10 +22,13 @@ class CustomUserManager(BaseUserManager):
 
 class User(AbstractUser):
     email = models.EmailField(unique=True, verbose_name='Email')
-    username = models.CharField(max_length=150, blank=True, null=True)  # допустим, оставим
-    patronymic = models.CharField(max_length=50, blank=True, null=True, verbose_name='Отчество')
-    phone = models.CharField(max_length=15, blank=True, null=True, verbose_name='Телефон')
-    role = models.CharField(max_length=32, verbose_name='Роль', blank=False, null=False, default='user')
+    username = models.CharField(max_length=150, blank=True, null=True)
+    patronymic = models.CharField(max_length=50, blank=True, null=True,
+                                  verbose_name='Отчество')
+    phone = models.CharField(max_length=15, blank=True, null=True,
+                             verbose_name='Телефон')
+    role = models.CharField(max_length=32, verbose_name='Роль', blank=False,
+                            null=False, default='user')
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

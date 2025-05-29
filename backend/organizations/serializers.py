@@ -15,7 +15,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         request = self.context.get('request')
-        if request.user.role != 'organization':
+        if request.user != instance.owner:
             raise serializers.ValidationError("You do not have permission to update this organization.")
         return super().update(instance, validated_data)
 
