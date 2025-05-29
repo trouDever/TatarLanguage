@@ -1,0 +1,38 @@
+from .models import Organization, Course
+from rest_framework import serializers
+
+
+class OrganizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = '__all__'
+        read_only_fields = ('owner', 'created_at')
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        validated_data['owner'] = request.user
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        request = self.context.get('request')
+        if request.user != instance.owner:
+            raise serializers.ValidationError("You do not have permission to update this organization.")
+        return super().update(instance, validated_data)
+
+
+class CourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = '__all__'
+        read_only_fields = ('organization', 'created_at')
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        validated_data['organization'] = request.user.organizations.first()
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        request = self.context.get('request')
+        if request.user.role != 'organization':
+            raise serializers.ValidationError("You do not have permission to update this course.")
+        return super().update(instance, validated_data)
