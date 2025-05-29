@@ -1,4 +1,5 @@
 from django.urls import path, include
+from api.views import UserProfileView
 from .views import (OrganizationAPIView,
                     OrganizationListAPIView,
                     CourseListAPIView,
@@ -7,6 +8,7 @@ from .views import (OrganizationAPIView,
 urlpatterns = [
     path('v1/', include('djoser.urls')),
     path('v1/', include('djoser.urls.jwt')),
+    path('v1/user/profile/', UserProfileView.as_view(), name='user-profile'),
     path('v1/organization/me', OrganizationAPIView.as_view(),
          name='organization_me'),
     path('v1/organization/<int:pk>', OrganizationAPIView.as_view(),
