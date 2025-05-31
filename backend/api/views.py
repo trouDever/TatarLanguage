@@ -1,6 +1,11 @@
 from rest_framework import generics, permissions
 from django.contrib.auth import get_user_model
 from users.serializers import UserUpdateSerializer
+from organizations.models import Organization, Course
+from organizations.serializers import OrganizationSerializer, CourseSerializer
+from rest_framework import views, permissions
+from rest_framework.response import Response
+
 
 User = get_user_model()
 
@@ -12,10 +17,6 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
-from organizations.models import Organization, Course
-from organizations.serializers import OrganizationSerializer, CourseSerializer
-from rest_framework import views, permissions
-from rest_framework.response import Response
 
 
 class OrganizationAPIView(views.APIView):
@@ -89,6 +90,11 @@ class CourseAPIView(views.APIView):
         return Response(serializer.errors, status=400)
 
     def get(self, request, pk=None):
+        if request.path == '/api/v1/course/create':
+            return Response({'error': 'Method not allowed'}, status=405)
+        if request.user.role != 'organization':
+            return Response({'error': 'You do not have permission'},
+                            status=403)
         try:
             course = Course.objects.get(pk=pk)
             serializer = CourseSerializer(course)
