@@ -57,7 +57,6 @@ def update_events_task():
                 else:
                     total_updated += 1
 
-                # Пауза между запросами
                 time.sleep(1)
 
         except Exception as e:
