@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 from urllib.parse import urljoin
+from django.utils import timezone
 
 
 def parse_yandex_afisha(url, event_type):
@@ -22,23 +23,26 @@ def parse_yandex_afisha(url, event_type):
             date_item = card.find('li', class_='DetailsItem-fq4hbj-1')
             date_str = date_item.get_text(strip=True) if date_item else ''
 
-            try:
-                day_month, time = date_str.split(', ')
-                day, month = day_month.split()
-                month_map = {
-                    'января': 1, 'февраля': 2, 'марта': 3, 'апреля': 4,
-                    'мая': 5, 'июня': 6, 'июля': 7, 'августа': 8,
-                    'сентября': 9, 'октября': 10, 'ноября': 11, 'декабря': 12
-                }
-                date = datetime(
-                    year=datetime.now().year,
-                    month=month_map.get(month.lower(), 1),
-                    day=int(day),
-                    hour=int(time.split(':')[0]),
-                    minute=int(time.split(':')[1])
-                )
-            except (ValueError, AttributeError):
-                date = None
+            date = None
+            if date_str:
+                try:
+                    day_month, time = date_str.split(', ')
+                    day, month = day_month.split()
+                    month_map = {
+                        'января': 1, 'февраля': 2, 'марта': 3, 'апреля': 4,
+                        'мая': 5, 'июня': 6, 'июля': 7, 'августа': 8,
+                        'сентября': 9, 'октября': 10, 'ноября': 11, 'декабря': 12
+                    }
+                    naive_date = datetime(
+                        year=datetime.now().year,
+                        month=month_map.get(month.lower(), 1),
+                        day=int(day),
+                        hour=int(time.split(':')[0]),
+                        minute=int(time.split(':')[1])
+                    )
+                    date = timezone.make_aware(naive_date, timezone.get_current_timezone())
+                except (ValueError, AttributeError) as e:
+                    date = None
 
             venue = card.find('a', class_='PlaceLink-fq4hbj-2')
             venue = venue.get('title') if venue else ''
@@ -66,6 +70,8 @@ def parse_yandex_afisha(url, event_type):
         except Exception as e:
             print(f"Ошибка при парсинге карточки: {e}")
             continue
+
+    print(events)
 
     return events
 

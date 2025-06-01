@@ -45,6 +45,62 @@ services:
     ports:
       - "5433:5432"
     restart: unless-stopped
+  
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    env_file:
+      - .env
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  celery_worker:
+    build: ./backend
+    command: celery -A tatarlang.celery worker --loglevel=info
+    volumes:
+      - ./backend:/app
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672//
+  
+  celery_beat:
+    build: ./backend
+    command: celery -A tatarlang.celery beat --loglevel=info
+    volumes:
+      - ./backend:/app
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672//
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+
+  flower:
+    build: ./backend
+    command: celery -A tatarlang.celery flower --port=5555
+    ports:
+      - "5555:5555"
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672//
+    depends_on:
+      - rabbitmq
+      - celery_worker
+    restart: unless-stopped
 
 volumes:
   postgres_data:
