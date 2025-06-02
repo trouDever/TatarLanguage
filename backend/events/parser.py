@@ -82,9 +82,11 @@ def parse_event_page(url, headers):
         soup = BeautifulSoup(response.text, 'html.parser')
 
         description = ''
-        desc_block = soup.find('div', {'data-component': 'EventDescription'})
+        desc_block = soup.find('div', {'data-component': 'EventInfo_Description'})
         if desc_block:
             description = desc_block.get_text(strip=True, separator='\n')
+
+        print(description)
 
         return {'description': description}
     except Exception as e:

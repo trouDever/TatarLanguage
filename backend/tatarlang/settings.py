@@ -171,6 +171,6 @@ CELERY_TIMEZONE = 'Europe/Moscow'
 CELERY_BEAT_SCHEDULE = {
     'update-events': {
         'task': 'events.tasks.update_events_task',
-        'schedule': crontab(minute='*'),
+        'schedule': crontab(hour=2, minute=0),
     },
 }
