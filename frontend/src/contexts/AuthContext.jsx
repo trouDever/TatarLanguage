@@ -20,13 +20,20 @@ export function AuthProvider({ children }) {
                 try {
                     const { data } = await refreshToken(refresh);
                     setAccessToken(data.access);
+                    // Повторная попытка получить данные пользователя
+                    try {
+                        const userData = await getUserMe(data.access);
+                        setUser(userData.data);
+                    } catch {
+                        clearAuth();
+                    }
                 } catch {
                     clearAuth();
                 }
             } finally { setLoading(false); }
         }
         bootstrap();
-    }, []);
+    }, [access, refresh]); // Добавляем зависимости
 
     function setAccessToken(token) {
         localStorage.setItem('access', token);
