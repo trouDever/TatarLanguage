@@ -19,11 +19,14 @@ export default function Header() {
                 </div>
                 <div className={styles.nav__auth}>
                     {user ? (
-                        <button onClick={logout}>Выйти</button>
+                        <>
+                            <Link to="/profile" className={styles.profile}>Профиль</Link>
+                            <button onClick={logout} className={styles.exit}>Выйти</button>
+                        </>
                     ) : (
                         <>
-                            <Link to="/login">Вход</Link>
-                            <Link to="/register">Регистрация</Link>
+                            <Link to="/login" className={styles.nav__auth__link}>Вход</Link>
+                            <Link to="/register" className={styles.nav__auth__link}>Регистрация</Link>
                         </>
                     )}
                 </div>
