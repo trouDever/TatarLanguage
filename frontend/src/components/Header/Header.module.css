@@ -26,10 +26,20 @@
     gap: 59px;
 }
 
-.nav__sections_active {
-    padding: 5px 8px;
+.nav__sections a{
+    padding: 8px 12px;
     border-radius: 12px;
-    background: #000;
+    transition: background 0.3s ease;
+}
+
+.nav__sections a:not(.nav__sections_active, .logo__home):hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.nav__sections_active {
+    padding: 10px 15px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.84);
     color: #ffffff !important;
 }
 

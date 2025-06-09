@@ -28,7 +28,7 @@ export default function RegisterForm() {
                 refresh: data.refresh,
                 user: data.user // предполагая, что сервер возвращает информацию о пользователе
             });
-            navigate('/', { replace: true });
+            navigate('/profile', { replace: true });
         } catch {
             setError('Ошибка регистрации');
         }
