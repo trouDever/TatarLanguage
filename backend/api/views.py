@@ -1,10 +1,13 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, views
+from rest_framework.response import Response
+from rest_framework.viewsets import ReadOnlyModelViewSet
 from django.contrib.auth import get_user_model
+
 from users.serializers import UserUpdateSerializer
 from organizations.models import Organization, Course
 from organizations.serializers import OrganizationSerializer, CourseSerializer
-from rest_framework import views, permissions
-from rest_framework.response import Response
+from events.models import Event
+from events.serializers import EventSerializer
 
 
 User = get_user_model()
@@ -101,3 +104,8 @@ class CourseAPIView(views.APIView):
             return Response(serializer.data)
         except Course.DoesNotExist:
             return Response({'error': 'Course not found'}, status=404)
+
+
+class EventViewSet(ReadOnlyModelViewSet):
+    queryset = Event.objects.all().order_by('date')
+    serializer_class = EventSerializer

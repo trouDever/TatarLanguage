@@ -18,7 +18,7 @@ export default function LoginForm() {
         try {
             const { data } = await loginRequest({ email, password: pass });
             login({ access: data.access, refresh: data.refresh });
-            const redirect = location.state?.from?.pathname || '/';
+            const redirect = location.state?.from?.pathname || '/profile';
             navigate(redirect, { replace: true });
         } catch {
             setError('Неверные данные');
@@ -32,7 +32,7 @@ export default function LoginForm() {
         >
             <form onSubmit={handleSubmit} className={styles['auth-form']}>
                 <label htmlFor='email'>Почта</label>
-                <input id={'password'} value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email" />
+                <input id={'email'} value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email" />
                 <label htmlFor='password'>Пароль</label>
                 <input id={'password'} type="password" value={pass} onChange={e=>setPass(e.target.value)} placeholder="Пароль" />
                 {error && <div>{error}</div>}

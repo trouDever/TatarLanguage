@@ -1,0 +1,27 @@
+.profile-form {
+    max-width: 600px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 24px;
+
+}
+
+.form__input {
+    width: 100%;
+    padding: 10px;
+    font-size: 20px;
+}
+
+.form__button {
+    display: block;
+    max-width: 200px;
+    width: 100%;
+    margin: 30px auto 0;
+    padding: 10px;
+    font-size: 20px;
+    border-radius: 10px;
+    cursor: pointer;
+}

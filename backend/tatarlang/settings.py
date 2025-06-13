@@ -2,6 +2,7 @@
 from pathlib import Path
 from datetime import timedelta
 import os
+from celery.schedules import crontab
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -162,4 +163,14 @@ SWAGGER_SETTINGS = {
             'in': 'header'
       }
    }
+}
+
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = 'rpc://'
+CELERY_TIMEZONE = 'Europe/Moscow'
+CELERY_BEAT_SCHEDULE = {
+    'update-events': {
+        'task': 'events.tasks.update_events_task',
+        'schedule': crontab(hour=2, minute=0),
+    },
 }
