@@ -29,7 +29,6 @@ class User(AbstractUser):
                              verbose_name='Телефон')
     role = models.CharField(max_length=32, verbose_name='Роль', blank=False,
                             null=False, default='user')
-
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
