@@ -5,11 +5,12 @@ from .views import (OrganizationAPIView,
                     CourseAPIView, UserProfileView,
                     EventViewSet, ExamViewSet,
                     submit_exam, ResultRetrieveAPIView,
-                    ResultListAPIView)
+                    ResultListAPIView, EnrollmentViewSet)
 
 
 router = SimpleRouter()
 router.register('events', EventViewSet, basename='events')
+router.register('enrollments', EnrollmentViewSet, basename='enrollments')
 
 urlpatterns = [
     path('v1/', include('djoser.urls')),
