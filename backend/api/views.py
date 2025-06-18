@@ -13,7 +13,6 @@ from events.serializers import EventSerializer
 from exams.models import Exam, Result
 from exams.serializers import ExamSerializer, ResultSerializer, ExamCreateSerializer, SubmitExamSerializer
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 
 PERCENT_TO_PASS_EXAM = 60
 
@@ -26,44 +25,44 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
     def get_serializer_class(self):
         if self.request.method == 'GET':
             return UserSerializer
         return UserUpdateSerializer
 
-class OrganizationAPIView(views.APIView):
+
+class OrganizationAPIView(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
     
     @swagger_auto_schema(response_body=OrganizationSerializer)
     def get(self, request, pk=None):
-        if request.user.role == 'organization' and pk is None:
-            organization = get_object_or_404(Organization, owner=request.user)
-        else:
-            organization = get_object_or_404(Organization, pk=pk)
+        organization = get_object_or_404(Organization, pk=pk)
         serializer = OrganizationSerializer(organization)
         return Response(serializer.data)
-    @swagger_auto_schema(request_body=OrganizationSerializer)
-    def post(self, request, pk=None):
-        if request.user.role != 'organization':
-            return Response({'error': 'You do not have permission to create an organization'},
-                            status=403)
-        try:
-            organization = Organization.objects.get(owner=request.user)
-            serializer = OrganizationSerializer(organization,
-                                                data=request.data,
-                                                partial=True,
-                                                context={'request': request})
-            if serializer.is_valid():
-                organization = serializer.save()
-                return Response(OrganizationSerializer(organization).data)
-        except Organization.DoesNotExist:
-            serializer = OrganizationSerializer(data=request.data,
-                                                context={'request': request})
-            if serializer.is_valid():
-                organization = serializer.save()
-                return Response(OrganizationSerializer(organization).data, status=201)
-        return Response(serializer.errors, status=400)
 
+
+class OrganizationCreateRetrieveUpdateAPIView(mixins.CreateModelMixin,
+                                              mixins.RetrieveModelMixin,
+                                              mixins.UpdateModelMixin,
+                                              generics.GenericAPIView):
+    serializer_class = OrganizationSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOrganizationOwner]
+
+    def get_object(self):
+        return get_object_or_404(Organization, owner=self.request.user)
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 
 class OrganizationListAPIView(views.APIView):
@@ -90,34 +89,38 @@ class CourseCreateAPIView(generics.CreateAPIView):
 
 
 class CourseDetailAPIView(views.APIView):
-    permission_classes = [permissions.IsAuthenticated, IsOrganizationOwner]
-    @swagger_auto_schema(request_body=CourseSerializer, responses={201: CourseSerializer, 400: 'Bad Request', 404: 'Course not found'})
-    def post(self, request):
+    @swagger_auto_schema(request_body=CourseSerializer, responses={200: CourseSerializer, 400: 'Bad Request', 404: 'Course not found'})
+    def patch(self, request, pk=None):
+        course = get_object_or_404(Course, pk=pk)
         serializer = CourseSerializer(data=request.data,
-                                      context={'request': request})
+                                      context={'request': request},
+                                      instance=course,
+                                      partial=True)
         if serializer.is_valid():
             course = serializer.save()
-            return Response(CourseSerializer(course).data, status=201)
+            return Response(CourseSerializer(course).data, status=200)
         return Response(serializer.errors, status=400)
-
+    @swagger_auto_schema(responses={200: CourseSerializer, 404: 'Course not found'})
     def get(self, request, pk=None):
-        try:
-            course = Course.objects.get(pk=pk)
-            serializer = CourseSerializer(course)
-            return Response(serializer.data)
-        except Course.DoesNotExist:
-            return Response({'error': 'Course not found'}, status=404)
+        course = get_object_or_404(Course, pk=pk)
+        serializer = CourseSerializer(course)
+        return Response(serializer.data)
+        
+    def get_permissions(self):
+        if self.request.method in ['PATCH']:
+            return [permissions.IsAuthenticated(), IsOrganizationOwner()]
+        return [permissions.IsAuthenticated()]
 
 
 class EventViewSet(ReadOnlyModelViewSet):
     queryset = Event.objects.all().order_by('date')
     serializer_class = EventSerializer
-    permission_classes = [permissions.IsAuthenticated, IsOrganizationOwner]
+    permission_classes = [permissions.IsAuthenticated]
+
 
 class ExamViewSet(viewsets.ModelViewSet):
     queryset = Exam.objects.all().order_by('level')
     serializer_class = ExamSerializer
-    permission_classes = [permissions.IsAuthenticated, IsOrganizationOwner]
 
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):
@@ -130,7 +133,13 @@ class ExamViewSet(viewsets.ModelViewSet):
         if self.request.method in ['POST', 'PUT']:
             return ExamCreateSerializer
         return ExamSerializer
-    
+
+    def get_permissions(self):
+        if self.request.method in ['POST', 'PUT', 'DELETE']:
+            return [permissions.IsAuthenticated(), IsOrganizationOwner()]
+        return [permissions.IsAuthenticated()]
+
+
 @swagger_auto_schema(request_body=SubmitExamSerializer, methods=['post'])
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
@@ -177,6 +186,7 @@ def submit_exam(request):
         'percent': result_percent,
     }, status=200)
 
+
 class ResultRetrieveAPIView(generics.RetrieveAPIView):
     queryset = Result.objects.all()
     serializer_class = ResultSerializer
@@ -191,6 +201,7 @@ class ResultRetrieveAPIView(generics.RetrieveAPIView):
     def get_object(self):  
         obj = get_object_or_404(self.get_queryset(), pk=self.kwargs['pk'])
         return obj
+
 
 class ResultListAPIView(generics.ListAPIView):
     serializer_class = ResultSerializer

@@ -40,8 +40,7 @@ class Course(models.Model):
                               blank=True)
     start_date = models.DateField('Дата начала', null=True, blank=True)
     end_date = models.DateField('Дата окончания', null=True, blank=True)
-    level = models.CharField('Уровень',
-                             max_length=32,
+    level = models.IntegerField('Уровень',
                              choices=LEVEL_CHOICES,
                              validators=[
                                  MinValueValidator(1),

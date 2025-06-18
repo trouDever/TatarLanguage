@@ -6,7 +6,7 @@ from .views import (OrganizationAPIView,
                     EventViewSet, ExamViewSet,
                     submit_exam, ResultRetrieveAPIView,
                     ResultListAPIView, EnrollmentViewSet,
-                    CourseDetailAPIView)
+                    CourseDetailAPIView, OrganizationCreateRetrieveUpdateAPIView)
 
 
 router = SimpleRouter()
@@ -17,7 +17,7 @@ urlpatterns = [
     path('v1/', include('djoser.urls')),
     path('v1/', include('djoser.urls.jwt')),
     path('v1/user/profile/', UserProfileView.as_view(), name='user-profile'),
-    path('v1/organization/me', OrganizationAPIView.as_view(),
+    path('v1/organization/me', OrganizationCreateRetrieveUpdateAPIView.as_view(),
          name='organization_me'),
     path('v1/organization/<int:pk>', OrganizationAPIView.as_view(),
          name='organization_detail'),
