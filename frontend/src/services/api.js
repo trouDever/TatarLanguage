@@ -27,3 +27,9 @@ export function updateUserMe(data, access) {
         headers: { Authorization: `Bearer ${access}` },
     });
 }
+
+export function updateOrgMe(data, access) {
+    return api.patch('/organization/me/', data, {
+        headers: { Authorization: `Bearer ${access}` },
+    });
+}

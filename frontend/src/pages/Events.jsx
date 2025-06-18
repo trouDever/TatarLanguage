@@ -1,39 +1,55 @@
-import React from 'react';
+import {useEffect, useState} from 'react';
 import EventCard from "../components/EventCard/EventCard";
-import preview1 from '../assets/images/EventPreview/event-preview-1.jpg';
-import preview2 from '../assets/images/EventPreview/event-preview-2.jpg';
 import './Events.css';
+import {useAuth} from "../contexts/AuthContext";
 
 const Events = () => {
-    const eventsData = [
-        {
-            id: 1,
-            title: 'Концерт Pharaoh',
-            place: 'ул. Баумана 32',
-            price: '1500р',
-            image: preview1
-        },
-        {
-            id: 2,
-            title: 'Концерт GONE.Fludd',
-            place: 'ул. Пушкина 15',
-            price: '2000р',
-            image: preview2
-        },
+    const { access } = useAuth();
+    const [events, setEvents] = useState([]);
 
-    ];
+    useEffect(() => {
+        const fetchEvents = async () => {
+            try {
+
+                console.log('Текущий токен:', access);
+
+                const response = await fetch('http://127.0.0.1:8000/api/v1/events/', {
+                    headers: {
+                        'Authorization': `Bearer ${access}`,
+                    },
+                });
+                if (!response.ok) {
+                    throw new Error(`Ошибка сети: ${response.status}`);
+                }
+                console.log('Response:', response);
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    setEvents(data);
+                } else if (Array.isArray(data.results)) {
+                    setEvents(data.results);
+                } else {
+                    throw new Error("Неверный формат данных");
+                }
+            } catch (err) {
+                console.error("Ошибка загрузки событий:", err);
+            }
+        };
+        fetchEvents();
+    }, []);
+
 
     return (
         <div className='ivents-page'>
             <h1 className='ivents-title'>Мероприятия</h1>
             <section className='ivent-section'>
-                {eventsData.map((event) => (
+                {events.map((event) => (
                     <EventCard
                         key={event.id}
                         title={event.title}
-                        place={event.place}
-                        price={event.price}
-                        image={event.image}
+                        event_type={event.event_type}
+                        date={event.date}
+                        image={event['image_url']}
+                        url={event['source_url']}
                     />
                 ))}
 
