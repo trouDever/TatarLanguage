@@ -56,25 +56,32 @@
 .event-details__title {
     font-size: 52px;
     font-weight: 600;
-    margin-bottom: 24px;
+    margin-bottom: 18px;
 }
 
 .event-details__program {
     margin: 0 auto;
 }
 
-.event-details__place-name {
-    font-size: 32px;
-    font-weight: 600;
-    margin-bottom: 16px;
-}
 
-.event-details__place-info {
-    display: inline-block;
+
+.event-details__name {
+    font-size: 36px;
+    font-weight: 600;
+    margin-bottom: 24px;
+}
+.event-details__date {
+    text-align: center;
+}
+.event-details__info {
     font-size: 28px;
     font-weight: 400;
-    padding: 25px 0;
-    margin: 0 auto;
+    padding: 15px 0 5px;
+    text-align: center;
+}
+
+.event-details__info-time {
+    padding: 5px 0 25px;
 }
 
 .event-details__link {
@@ -87,6 +94,7 @@
     color: #fff;
     cursor: pointer;
     transition: background 0.3s ease;
+    text-decoration: none;
 }
 
 .event-details__link:hover {

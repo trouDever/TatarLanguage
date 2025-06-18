@@ -63,6 +63,7 @@
     object-fit: cover;
     padding: 5px;
     margin-right: 15px;
+    border-radius: 10px;
     background: linear-gradient(120deg, #005bbb 0%, #ff4433 100%);
     color: #ffffff !important;
     font-weight: bold;

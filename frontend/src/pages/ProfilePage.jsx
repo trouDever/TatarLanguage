@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { updateUserMe, updateOrgMe } from '../services/api';
+import { updateUserMe } from '../services/api';
 import './ProfilePage.css';
 
 
@@ -10,8 +10,6 @@ export default function ProfilePage() {
         first_name: '',
         last_name: '',
         phone: '',
-    });
-    const [formOrg, setFormOrg] = useState({
         org_name: '',
         org_socials: '',
     });
@@ -23,11 +21,9 @@ export default function ProfilePage() {
                 first_name: user.first_name || '',
                 last_name: user.last_name || '',
                 phone: user.phone || '',
-            });
-            setFormOrg({
                 org_name: user.org_name || '',
                 org_socials: user.org_socials || '',
-            })
+            });
         }
     }, [user]);
 
@@ -35,17 +31,12 @@ export default function ProfilePage() {
 
     const isOrg = user.role === 'organization';
 
-    function handleChangeUser(e) {
+    function handleChange(e) {
         setForm({ ...form, [e.target.name]: e.target.value });
-    }
-
-    function handleChangeOrg(e) {
-        setFormOrg({ ...formOrg, [e.target.name]: e.target.value });
     }
 
     async function save() {
         await updateUserMe(form, access);
-        await updateOrgMe(formOrg, access);
         window.location.reload();
     }
 
@@ -56,16 +47,16 @@ export default function ProfilePage() {
                     <label>Название организации</label>
                     <input
                         name="org_name"
-                        value={formOrg.org_name}
-                        onChange={handleChangeOrg}
+                        value={form.org_name}
+                        onChange={handleChange}
                         disabled={!editing}
                         className="form__input"
                     />
                     <label>Соц-сети организации</label>
                     <input
                         name="org_socials"
-                        value={formOrg.org_socials}
-                        onChange={handleChangeOrg}
+                        value={form.org_socials}
+                        onChange={handleChange}
                         disabled={!editing}
                         className="form__input"
                     />
@@ -76,7 +67,7 @@ export default function ProfilePage() {
                     <input
                         name="first_name"
                         value={form.first_name}
-                        onChange={handleChangeUser}
+                        onChange={handleChange}
                         disabled={!editing}
                         className="form__input"
                     />
@@ -84,7 +75,7 @@ export default function ProfilePage() {
                     <input
                         name="last_name"
                         value={form.last_name}
-                        onChange={handleChangeUser}
+                        onChange={handleChange}
                         disabled={!editing}
                         className="form__input"
                     />
@@ -92,7 +83,7 @@ export default function ProfilePage() {
                     <input
                         name="phone"
                         value={form.phone}
-                        onChange={handleChangeUser}
+                        onChange={handleChange}
                         disabled={!editing}
                         className="form__input"
                     />

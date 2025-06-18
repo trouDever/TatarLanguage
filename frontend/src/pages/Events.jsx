@@ -38,6 +38,7 @@ const Events = () => {
     }, []);
 
 
+
     return (
         <div className='ivents-page'>
             <h1 className='ivents-title'>Мероприятия</h1>
@@ -46,8 +47,10 @@ const Events = () => {
                     <EventCard
                         key={event.id}
                         title={event.title}
+                        place={event.venue}
                         event_type={event.event_type}
-                        date={event.date}
+                        date={event.date.split('T')[0]}
+                        time={event.date.split('T')[1].slice(0, 5)}
                         image={event['image_url']}
                         url={event['source_url']}
                     />
