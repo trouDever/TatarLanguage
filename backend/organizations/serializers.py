@@ -1,4 +1,4 @@
-from .models import Organization, Course
+from .models import Organization, Course, Enrollment
 from rest_framework import serializers
 
 
@@ -36,3 +36,16 @@ class CourseSerializer(serializers.ModelSerializer):
         if request.user.role != 'organization':
             raise serializers.ValidationError("You do not have permission to update this course.")
         return super().update(instance, validated_data)
+
+
+class EnrollmentSerializer(serializers.ModelSerializer):
+    course_name = serializers.CharField(source='course.name', read_only=True)
+
+    class Meta:
+        model = Enrollment
+        fields = ['id', 'course', 'course_name', 'created_at']
+        read_only_fields = ['created_at']
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)

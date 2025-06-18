@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions, views, viewsets
+from rest_framework import generics, permissions, views, viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from django.contrib.auth import get_user_model
@@ -6,8 +6,8 @@ from .permissions import IsOrganizationOwner
 from rest_framework.decorators import api_view, permission_classes
 from django.shortcuts import get_object_or_404
 from users.serializers import UserUpdateSerializer, UserSerializer
-from organizations.models import Organization, Course
-from organizations.serializers import OrganizationSerializer, CourseSerializer
+from organizations.models import Organization, Course, Enrollment
+from organizations.serializers import OrganizationSerializer, CourseSerializer, EnrollmentSerializer
 from events.models import Event
 from events.serializers import EventSerializer
 from exams.models import Exam, Result
@@ -201,3 +201,13 @@ class ResultListAPIView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         return Result.objects.filter(user=user).order_by('-completed_at')
+
+
+class EnrollmentViewSet(mixins.CreateModelMixin,
+                        mixins.ListModelMixin,
+                        viewsets.GenericViewSet):
+    serializer_class = EnrollmentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Enrollment.objects.filter(user=self.request.user)
