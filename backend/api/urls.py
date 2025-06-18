@@ -2,10 +2,11 @@ from django.urls import path, include
 from rest_framework.routers import SimpleRouter
 from .views import (OrganizationAPIView,
                     OrganizationListAPIView, CourseListAPIView,
-                    CourseAPIView, UserProfileView,
+                    CourseCreateAPIView, UserProfileView,
                     EventViewSet, ExamViewSet,
                     submit_exam, ResultRetrieveAPIView,
-                    ResultListAPIView, EnrollmentViewSet)
+                    ResultListAPIView, EnrollmentViewSet,
+                    CourseDetailAPIView)
 
 
 router = SimpleRouter()
@@ -20,13 +21,11 @@ urlpatterns = [
          name='organization_me'),
     path('v1/organization/<int:pk>', OrganizationAPIView.as_view(),
          name='organization_detail'),
-    path('v1/organization/<int:pk>/edit', OrganizationAPIView.as_view(),
-         name='organization_edit'),
     path('v1/organization/', OrganizationListAPIView.as_view(),
          name='organization_list'),
     path('v1/course/', CourseListAPIView.as_view(), name='course_list'),
-    path('v1/course/create', CourseAPIView.as_view(), name='course_create'),
-    path('v1/course/<int:pk>', CourseAPIView.as_view(), name='course_detail'),
+    path('v1/course/create', CourseCreateAPIView.as_view(), name='course_create'),
+    path('v1/course/<int:pk>', CourseDetailAPIView.as_view(), name='course_detail'),
     path('v1/exam/', ExamViewSet.as_view({'get': 'list', 'post': 'create'}), name='exam_list_create'),
     path('v1/exam/<int:pk>', ExamViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='exam_detail'),
     path('v1/exam/submit', submit_exam, name='submit_exam'),

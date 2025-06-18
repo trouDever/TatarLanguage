@@ -115,3 +115,10 @@ class ResultSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
+class SubmitAnswerSerializer(serializers.Serializer):
+    question_number = serializers.IntegerField(help_text='Номер вопроса')
+    text = serializers.CharField(help_text='Текст ответа')
+
+class SubmitExamSerializer(serializers.Serializer):
+    exam_id = serializers.IntegerField(help_text='ID экзамена')
+    answers = SubmitAnswerSerializer(many=True, help_text='Список ответов на вопросы экзамена')
