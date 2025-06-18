@@ -5,3 +5,4 @@
 **.pyc
 /.idea
 /.mypy_cache
+backend/media/*

@@ -21,6 +21,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    organization_name = serializers.CharField(source='organization.name', read_only=True)
     class Meta:
         model = Course
         fields = '__all__'

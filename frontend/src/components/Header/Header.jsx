@@ -24,14 +24,19 @@ export default function Header() {
                         <img className={styles.logo} src={logo} alt="logo" />
                     </Link>
                     <Link to="/" onClick={handleSwitchSection} className={styles.nav__sections_active}>Главная</Link>
-                    <Link to="/" onClick={handleSwitchSection}>Курсы</Link>
+                    <Link to="/courses" onClick={handleSwitchSection}>Курсы</Link>
                     <Link to="/events" onClick={handleSwitchSection}>Мероприятия</Link>
-                    <Link to="/" onClick={handleSwitchSection}>Контакты</Link>
+                    <Link to="/exams" onClick={handleSwitchSection}>Тесты</Link>
                 </div>
                 <div className={styles.nav__auth}>
                     {user ? (
                         <>
-                            <Link to="/profile" className={styles.profile}>Профиль</Link>
+                            <Link 
+                                to={user.role === 'organization' ? '/organization-profile' : '/profile'} 
+                                className={styles.profile}
+                            >
+                                Профиль
+                            </Link>
                             <button onClick={logout} className={styles.exit}>Выйти</button>
                         </>
                     ) : (

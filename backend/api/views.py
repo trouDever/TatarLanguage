@@ -78,7 +78,17 @@ class CourseListAPIView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        courses = Course.objects.all()
+        if request.user.role == 'organization':
+            # Для организаций показываем только их курсы
+            organization = request.user.organizations.first()
+            if organization:
+                courses = Course.objects.filter(organization=organization)
+            else:
+                courses = Course.objects.none()
+        else:
+            # Для обычных пользователей показываем все курсы
+            courses = Course.objects.all()
+        
         serializer = CourseSerializer(courses, many=True)
         return Response(serializer.data)
 
@@ -100,14 +110,23 @@ class CourseDetailAPIView(views.APIView):
             course = serializer.save()
             return Response(CourseSerializer(course).data, status=200)
         return Response(serializer.errors, status=400)
+    
     @swagger_auto_schema(responses={200: CourseSerializer, 404: 'Course not found'})
     def get(self, request, pk=None):
         course = get_object_or_404(Course, pk=pk)
         serializer = CourseSerializer(course)
         return Response(serializer.data)
+    
+    def delete(self, request, pk=None):
+        course = get_object_or_404(Course, pk=pk)
+        # Проверяем, что пользователь является владельцем организации, которой принадлежит курс
+        if request.user.role != 'organization' or course.organization.owner != request.user:
+            return Response({'error': 'У вас нет прав для удаления этого курса'}, status=403)
+        course.delete()
+        return Response({'message': 'Курс успешно удален'}, status=204)
         
     def get_permissions(self):
-        if self.request.method in ['PATCH']:
+        if self.request.method in ['PATCH', 'DELETE']:
             return [permissions.IsAuthenticated(), IsOrganizationOwner()]
         return [permissions.IsAuthenticated()]
 
@@ -115,8 +134,7 @@ class CourseDetailAPIView(views.APIView):
 class EventViewSet(ReadOnlyModelViewSet):
     queryset = Event.objects.all().order_by('date')
     serializer_class = EventSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
+    permission_classes = [permissions.AllowAny]
 
 class ExamViewSet(viewsets.ModelViewSet):
     queryset = Exam.objects.all().order_by('level')
