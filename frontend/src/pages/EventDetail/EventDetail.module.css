@@ -15,14 +15,14 @@
 
 .event-preview__container {
     width: 100%;
-    max-height: 400px;
+    max-height: 500px;
     border-radius: 20px;
     overflow: hidden;
 }
 
 .event-preview__container-img {
     width: 100%;
-    max-height: 400px;
+    max-height: 500px;
     object-fit: cover;
     transition: transform .5s ease-out;
 }
@@ -56,26 +56,36 @@
 .event-details__title {
     font-size: 52px;
     font-weight: 600;
-    margin-bottom: 24px;
+    margin-bottom: 18px;
 }
 
 .event-details__program {
-    padding: 20px;
+    margin: 0 auto;
 }
 
-.event-details__place-name {
-    font-size: 32px;
+
+
+.event-details__name {
+    font-size: 36px;
     font-weight: 600;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
 }
-
-.event-details__place-info {
+.event-details__date {
+    text-align: center;
+}
+.event-details__info {
     font-size: 28px;
     font-weight: 400;
-    padding: 25px;
+    padding: 15px 0 5px;
+    text-align: center;
 }
 
-.event-details__button {
+.event-details__info-time {
+    padding: 5px 0 25px;
+}
+
+.event-details__link {
+    text-align: center;
     font-size: 22px;
     font-weight: 600;
     padding: 12px 24px;
@@ -84,8 +94,9 @@
     color: #fff;
     cursor: pointer;
     transition: background 0.3s ease;
+    text-decoration: none;
 }
 
-.event-details__button:hover {
+.event-details__link:hover {
     background: rgb(0, 0, 0);
 }

@@ -1,17 +1,17 @@
 .ivent-card-container {
-    max-width: 400px;
+    max-width: 500px;
     border-radius: 12px;
 
 }
 .ivent-card-preview {
     width: 100%;
-    max-height: 250px;
+    max-height: 270px;
     border-radius: 20px;
     overflow: hidden;
 }
 .ivent-card-img {
     width: 100%;
-    max-height: 250px;
+    max-height: 270px;
     object-fit: cover;
     transition: transform .5s ease-out;
 
@@ -26,11 +26,13 @@
     display: flex;
     justify-content: space-between;
     padding: 16px;
+    gap: 20px;
 }
 
 .ivent-card-info__top {
     display: flex;
     flex-direction: column;
+
 }
 
 .ivent-card-info__top-title {
@@ -46,13 +48,12 @@
     color: #666;
 }
 
-.ivent-card-info__price {
+.ivent-card-info__type {
     font-weight: 600;
-    font-size: 18px;
+    font-size: 22px;
     padding: 5px 10px;
     align-self: center;
-    border-radius: 20px;
-    background: rgba(0, 0, 0, 0.4);
-
+    border-radius: 16px;
+    background: rgba(221, 221, 221, 0.4);
 }
 

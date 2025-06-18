@@ -5,7 +5,7 @@ import {useLocation} from 'react-router-dom';
 
 const EventDetail = () => {
     const location = useLocation();
-    const { title, place, price, image } = location.state;
+    const {title, event_type, place, date, time, image, url} = location.state;
 
     return (
         <main className={styles.content}>
@@ -17,29 +17,34 @@ const EventDetail = () => {
                     </div>
 
                     <p className={styles['event-preview__description-info']}>
-                        <p className={styles['event-preview__description-name']}>О событии</p>
-                        Концерт Фараона — это уникальное погружение в
-                        мир мрачного звучания и откровенных текстов, которые бьют прямо в сердце. На сцене оживают
-                        тяжелые биты и атмосферные мелодии, создавая магическую ауру настоящего хип-хопа. Не упусти
-                        возможность стать частью этого музыкального откровения.
+                        <p className={styles['event-preview__description-name']}>Что нас ждет?</p>
+                        {event_type}
                     </p>
                 </div>
                 <div className={styles['event-details']}>
                     <h1 className={styles['event-details__title']}>{title}</h1>
                     <div className={styles['event-details__program']}>
-                        <p className={styles['event-details__place-name']}>Где встречаемся?
-                            <p className={styles['event-details__place-info']}>
+                        <p className={`${styles['event-details__name']} ${styles['event-details__date']}`}>Когда?</p>
+                            <p className={styles['event-details__info']}>
+                                {date}
+                            </p>
+                            <p className={`${styles['event-details__info']} ${styles['event-details__info-time']}`}>
+                                {time}
+                            </p>
+                        <p className={styles['event-details__name']}>Где встречаемся?
+                            <p className={styles['event-details__info']}>
                                 {place}
                             </p>
                         </p>
 
-                    </div>
-                    <button className={`${styles['event-details__button']}`}>Записаться
-                    </button>
                 </div>
+                <a href={url} className={`${styles['event-details__link']}`}>Записаться
+                </a>
             </div>
-        </main>
-    );
+        </div>
+</main>
+)
+    ;
 };
 
 export default EventDetail;
