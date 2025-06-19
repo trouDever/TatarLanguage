@@ -21,6 +21,8 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    photo = serializers.ImageField(required=False)
+
     class Meta:
         model = Course
         fields = '__all__'

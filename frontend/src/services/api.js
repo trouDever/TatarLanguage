@@ -27,3 +27,50 @@ export function updateUserMe(data, access) {
         headers: { Authorization: `Bearer ${access}` },
     });
 }
+
+export function getCourses(access) {
+  return api.get('/course/', {
+    headers: {
+      Authorization: `Bearer ${access}`
+    },
+  });
+}
+
+export function getCourse(id, access) {
+  return api.get(`/course/${id}`, {
+    headers: {
+      Authorization: `Bearer ${access}`,
+    },
+  });
+}
+
+export function createCourse(data, access) {
+  const formData = new FormData();
+  for (let key in data) {
+    if (data[key]) {
+      formData.append(key, data[key]);
+    }
+  }
+
+  return api.post('/course/create', formData, {
+    headers: {
+      Authorization: `Bearer ${access}`
+    },
+  });
+}
+
+export function updateCourse(id, data, accessToken) {
+  const formData = new FormData();
+  for (let key in data) {
+    if (data[key] !== null && data[key] !== undefined) {
+      formData.append(key, data[key]);
+    }
+  }
+
+  return api.patch(`/course/${id}/`, formData, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+}

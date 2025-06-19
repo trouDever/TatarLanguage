@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions, views, viewsets, mixins
+from rest_framework import generics, permissions, views, viewsets, mixins, serializers
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from django.contrib.auth import get_user_model
@@ -14,6 +14,7 @@ from exams.models import Exam, Result
 from exams.serializers import ExamSerializer, ResultSerializer, ExamCreateSerializer, SubmitExamSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework.parsers import MultiPartParser, FormParser
 
 PERCENT_TO_PASS_EXAM = 60
 
@@ -87,26 +88,41 @@ class CourseListAPIView(views.APIView):
 class CourseCreateAPIView(generics.CreateAPIView):
     serializer_class = CourseSerializer
     permission_classes = [permissions.IsAuthenticated, IsOrganizationOwner]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+    def perform_create(self, serializer):
+        organization = self.request.user.organizations.first()
+        if not organization:
+            raise serializers.ValidationError("У пользователя нет организации.")
+        serializer.save(organization=organization)
 
 
 class CourseDetailAPIView(views.APIView):
-    permission_classes = [permissions.IsAuthenticated, IsOrganizationOwner]
-    @swagger_auto_schema(request_body=CourseSerializer, responses={201: CourseSerializer, 400: 'Bad Request', 404: 'Course not found'})
-    def post(self, request):
+    @swagger_auto_schema(request_body=CourseSerializer, responses={200: CourseSerializer, 400: 'Bad Request', 404: 'Course not found'})
+    def patch(self, request, pk=None):
+        course = get_object_or_404(Course, pk=pk)
         serializer = CourseSerializer(data=request.data,
-                                      context={'request': request})
+                                      context={'request': request},
+                                      instance=course,
+                                      partial=True)
         if serializer.is_valid():
             course = serializer.save()
-            return Response(CourseSerializer(course).data, status=201)
+            return Response(CourseSerializer(course).data, status=200)
         return Response(serializer.errors, status=400)
 
+    @swagger_auto_schema(responses={200: CourseSerializer, 404: 'Course not found'})
     def get(self, request, pk=None):
-        try:
-            course = Course.objects.get(pk=pk)
-            serializer = CourseSerializer(course)
-            return Response(serializer.data)
-        except Course.DoesNotExist:
-            return Response({'error': 'Course not found'}, status=404)
+        course = get_object_or_404(Course, pk=pk)
+        serializer = CourseSerializer(course)
+        return Response(serializer.data)
+
+    def get_permissions(self):
+        if self.request.method in ['PATCH']:
+            return [permissions.IsAuthenticated(), IsOrganizationOwner()]
+        return [permissions.IsAuthenticated()]
 
 
 class EventViewSet(ReadOnlyModelViewSet):
