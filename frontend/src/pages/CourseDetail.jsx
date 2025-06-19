@@ -87,6 +87,12 @@ export default function CourseDetail() {
         }
     };
 
+    // Добавляю функцию для отображения уровня
+    function getLevelLabel(level) {
+        const levels = { 1: 'A1', 2: 'A2', 3: 'B1', 4: 'B2', 5: 'C1', 6: 'C2' };
+        return levels[level] || level;
+    }
+
     if (loading) {
         return (
             <main style={{ maxWidth: 700, margin: '0 auto', padding: 24 }}>
@@ -136,7 +142,7 @@ export default function CourseDetail() {
                         </p>
                     )}
                     <p><b>Описание:</b> {course.description}</p>
-                    <p><b>Уровень:</b> {course.level}</p>
+                    <p><b>Уровень:</b> {getLevelLabel(course.level)}</p>
                     <p><b>Даты:</b> {course.start_date} — {course.end_date}</p>
                     
                     {enrolled ? (

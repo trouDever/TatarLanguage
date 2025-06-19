@@ -5,7 +5,7 @@ from .models import Exam, Result, Choice, Question
 class ChoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Choice
-        fields = ['id', 'text']
+        fields = ['id', 'text', 'is_correct']
         read_only_fields = ['id']
 
     def validate_text(self, value):
@@ -31,7 +31,6 @@ class QuestionCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = ['text', 'point', 'choices', 'number']
-        read_only_fields = ['number']
         extra_kwargs = {
             'exam': {'required': False}
         }

@@ -10,4 +10,4 @@ class IsOrganizationOwner(permissions.BasePermission):
         return request.user.role == 'organization' or request.method in permissions.SAFE_METHODS
     def has_object_permission(self, request, view, obj):
         # Allow access if the user is the owner of the organization
-        return obj.author == request.user or request.method in permissions.SAFE_METHODS
+        return obj.author == request.user.organizations.first() or request.method in permissions.SAFE_METHODS
