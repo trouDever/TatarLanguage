@@ -75,7 +75,6 @@ export default function ProfilePage() {
         org_name: user.org_name || '',
         org_socials: user.org_socials || '',
       });
-      
       if (user.role !== 'organization') {
         fetchUserData();
       } else {
@@ -86,25 +85,19 @@ export default function ProfilePage() {
 
   const fetchUserData = async () => {
     try {
-      // Пытаемся загрузить данные с API, если не получается - используем моковые данные
+      // Пытаемся загрузить данные с API, если не получается - fallback
       const [coursesResult, testsResult] = await Promise.allSettled([
         fetchEnrolledCourses(),
         fetchTestResults()
       ]);
-      
-      // Если API недоступен, используем моковые данные
       if (coursesResult.status === 'rejected') {
         setEnrolledCourses(mockCourses);
       }
-      
       if (testsResult.status === 'rejected') {
         setTestResults(mockTestResults);
         setExamTitles(mockExamTitles);
       }
-      
     } catch (error) {
-      console.error('Ошибка загрузки данных пользователя:', error);
-      // Используем моковые данные как fallback
       setEnrolledCourses(mockCourses);
       setTestResults(mockTestResults);
       setExamTitles(mockExamTitles);
@@ -114,7 +107,7 @@ export default function ProfilePage() {
   };
 
   const fetchEnrolledCourses = async () => {
-    const response = await fetch('http://127.0.0.1:8000/api/v1/enrollment/', {
+    const response = await fetch('http://127.0.0.1:8000/api/v1/enrollments/', {
       headers: { 'Authorization': `Bearer ${access}` },
     });
     if (!response.ok) throw new Error('Ошибка загрузки записей на курсы');
@@ -148,11 +141,9 @@ export default function ProfilePage() {
       headers: { 'Authorization': `Bearer ${access}` },
     });
     if (!response.ok) throw new Error('Ошибка загрузки результатов тестов');
-    
     const results = await response.json();
     const resultsList = Array.isArray(results) ? results : results.results || [];
     setTestResults(resultsList);
-
     // Получаем названия тестов
     const titles = {};
     for (const result of resultsList) {
@@ -174,7 +165,7 @@ export default function ProfilePage() {
   };
 
   const getLevelLabel = (level) => {
-    const levels = { 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6' };
+    const levels = { 1: 'A1', 2: 'A2', 3: 'B1', 4: 'B2', 5: 'C1', 6: 'C2' };
     return levels[level] || level;
   };
 
@@ -419,26 +410,13 @@ export default function ProfilePage() {
                 </div>
               ) : testResults.length > 0 ? (
                 <div className="tests-grid">
-                  {testResults.map((result) => (
+                  {testResults.map(result => (
                     <div key={result.id} className="test-card">
                       <div className="test-header">
                         <h3 className="test-title">{examTitles[result.exam] || 'Тест'}</h3>
-                        <div 
-                          className="test-score"
-                          style={{ '--score-color': getScoreColor(result.score) }}
-                        >
-                          {result.score} баллов
-                        </div>
+                        <div className="test-score" style={{ color: '#222', background: 'none' }}>{result.score} баллов</div>
                       </div>
-                      
-                      <div className="test-status">
-                        <div className={`status-badge ${result.score >= 60 ? 'passed' : 'failed'}`}>
-                          {result.score >= 60 ? 'Пройден' : 'Не пройден'}
-                        </div>
-                        <div className="test-grade">{getScoreText(result.score)}</div>
-                      </div>
-
-                      <div className="test-date">
+                      <div className="test-date" style={{ color: '#222' }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                           <line x1="16" y1="2" x2="16" y2="6"/>
@@ -446,18 +424,6 @@ export default function ProfilePage() {
                           <line x1="3" y1="10" x2="21" y2="10"/>
                         </svg>
                         {new Date(result.completed_at).toLocaleDateString()}
-                      </div>
-
-                      <div className="test-actions">
-                        <Link 
-                          to={`/exam/${result.exam}`} 
-                          className="test-action-btn retake-btn"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                          </svg>
-                          Пересдать
-                        </Link>
                       </div>
                     </div>
                   ))}

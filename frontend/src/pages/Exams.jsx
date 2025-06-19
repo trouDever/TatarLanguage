@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import ExamCard from '../components/ExamCard/ExamCard';
@@ -44,47 +44,79 @@ const staticExams = [
   }
 ];
 
-// Статические результаты тестов
-const staticResults = [
-  {
-    id: 1,
-    exam: 1,
-    score: 85,
-    completed_at: '2025-06-15T10:30:00Z'
-  },
-  {
-    id: 2,
-    exam: 2,
-    score: 92,
-    completed_at: '2025-06-10T14:20:00Z'
-  },
-  {
-    id: 3,
-    exam: 3,
-    score: 67,
-    completed_at: '2025-06-05T16:45:00Z'
-  }
-];
 
 export default function Exams() {
-  const { user } = useAuth();
+  const { user, access } = useAuth();
+  const [exams, setExams] = useState([]);
+  const [results, setResults] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleDeleteExam = (examId) => {
-    alert('Функция удаления будет доступна после подключения к API');
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const examsRes = await fetch('http://127.0.0.1:8000/api/v1/exam/', {
+          headers: access ? { 'Authorization': `Bearer ${access}` } : {},
+        });
+        let examsData = await examsRes.json();
+        examsData = Array.isArray(examsData) ? examsData : examsData.results || [];
+        setExams(examsData.length ? examsData : staticExams);
+        // Загружаем результаты пользователя
+        if (access) {
+          const resultsRes = await fetch('http://127.0.0.1:8000/api/v1/result/', {
+            headers: { 'Authorization': `Bearer ${access}` },
+          });
+          let resultsData = await resultsRes.json();
+          resultsData = Array.isArray(resultsData) ? resultsData : resultsData.results || [];
+          setResults(resultsData);
+        } else {
+          setResults([]);
+        }
+      } catch (e) {
+        setError('Ошибка загрузки тестов');
+        setExams(staticExams);
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [access]);
+
+  const handleDeleteExam = async (examId) => {
+    if (!window.confirm('Вы уверены, что хотите удалить этот тест? Это действие необратимо.')) return;
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/v1/exam/${examId}`, {
+        method: 'DELETE',
+        headers: access ? { 'Authorization': `Bearer ${access}` } : {},
+      });
+      if (!response.ok) throw new Error('Ошибка удаления теста');
+      setExams(prev => prev.filter(e => e.id !== examId));
+    } catch (e) {
+      alert('Ошибка при удалении теста: ' + (e.message || 'Неизвестная ошибка'));
+    }
   };
 
-  const filteredExams = staticExams.filter(exam => {
+  const filteredExams = exams.filter(exam => {
     const matchesSearch = exam.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          exam.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch;
   });
 
   const getExamTitle = (examId) => {
-    const exam = staticExams.find(e => e.id === examId);
+    const exam = exams.find(e => e.id === examId);
     return exam ? exam.title : 'Тест';
   };
+
+  if (loading) {
+    return <div style={{textAlign: 'center', padding: 40}}>Загрузка тестов...</div>;
+  }
+  if (error) {
+    return <div style={{textAlign: 'center', color: 'red', padding: 40}}>{error}</div>;
+  }
 
   return (
     <div className="modern-exams-page">
@@ -207,7 +239,7 @@ export default function Exams() {
         {activeTab === 'completed' && user?.role !== 'organization' && (
           <div className="modern-results-section">
             <h2 className="results-title">История результатов</h2>
-            {staticResults.length === 0 ? (
+            {results.length === 0 ? (
               <div className="modern-empty-state">
                 <div className="empty-icon">
                   <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
@@ -219,7 +251,7 @@ export default function Exams() {
               </div>
             ) : (
               <div className="modern-results-grid">
-                {staticResults.map((result) => (
+                {results.map((result) => (
                   <div key={result.id} className="modern-result-card">
                     <div className="result-header">
                       <h4>{getExamTitle(result.exam)}</h4>

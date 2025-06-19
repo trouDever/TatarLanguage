@@ -72,6 +72,7 @@ function getRandomItems(arr, n) {
 }
 
 export default function HomePage() {
+    const [allEvents, setAllEvents] = useState([]);
     const [events, setEvents] = useState([]);
     const [exams, setExams] = useState([]);
     const [courses, setCourses] = useState([]);
@@ -102,9 +103,11 @@ export default function HomePage() {
                 if (!response.ok) throw new Error('Ошибка загрузки мероприятий');
                 const data = await response.json();
                 let list = Array.isArray(data) ? data : data.results || [];
+                setAllEvents(list);
                 list = list.sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 6);
                 setEvents(list);
             } catch (err) {
+                setAllEvents([]);
                 setEvents([]);
             }
         };
@@ -127,8 +130,8 @@ export default function HomePage() {
         fetchExams();
     }, [access]);
 
+    const randomCourses = getRandomItems(courses, 3);
     const randomExams = getRandomItems(exams, 3);
-    const popularCourses = courses.slice(0, 3);
 
     return (
         <main className="homepage">
@@ -169,7 +172,7 @@ export default function HomePage() {
                         <div className="stat-label">Тестов</div>
                     </div>
                     <div className="stat-item">
-                        <div className="stat-number">{events.length}</div>
+                        <div className="stat-number">{allEvents.length}</div>
                         <div className="stat-label">Мероприятий</div>
                     </div>
                 </div>
@@ -178,11 +181,11 @@ export default function HomePage() {
             {/* Курсы */}
             <section className="content-section">
                 <div className="section-header">
-                    <h2 className="section-title">Популярные курсы</h2>
+                    <h2 className="section-title">Запишитесь на курсы <span style={{fontSize: '1rem', color: '#888'}}></span></h2>
                     <p className="section-description">Изучайте татарский язык</p>
                 </div>
                 <div className="cards-grid">
-                    {popularCourses.length === 0 ? (
+                    {randomCourses.length === 0 ? (
                         <div className="empty-state">
                             <div className="empty-icon">
                                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
@@ -193,7 +196,7 @@ export default function HomePage() {
                             <p>Нет доступных курсов</p>
                         </div>
                     ) : (
-                        popularCourses.map(course => (
+                        randomCourses.map(course => (
                             <div key={course.id} className="card-wrapper">
                                 <CourseCard 
                                     id={course.id}

@@ -153,7 +153,7 @@ class ExamViewSet(viewsets.ModelViewSet):
         return ExamSerializer
 
     def get_permissions(self):
-        if self.request.method in ['POST', 'PUT', 'DELETE']:
+        if self.request.method in ['POST', 'PUT', 'DELETE', 'PATCH']:
             return [permissions.IsAuthenticated(), IsOrganizationOwner()]
         return [permissions.IsAuthenticated()]
 
@@ -170,7 +170,7 @@ def submit_exam(request):
 
     exam = get_object_or_404(Exam, id=exam_id)
     score = 0
-
+    right_answers = 0
     for answer in answers:
         question_number = answer['question_number']
         text = answer['text']
@@ -184,6 +184,7 @@ def submit_exam(request):
         selected_choice = question.choices.filter(text=text).first()
         if selected_choice and selected_choice.is_correct:
             score += question.point
+            right_answers += 1
 
     result_percent = score / exam.total_points * 100
     passed = result_percent >= PERCENT_TO_PASS_EXAM
@@ -194,14 +195,12 @@ def submit_exam(request):
             if result.score < score:
                 result.score = score
                 result.save()
-            else:
-                return Response({'result': 'already passed', 'score': result.score}, status=200)
-        else:
-            result = Result.objects.create(user=request.user, exam=exam, score=score)
+        result = Result.objects.create(user=request.user, exam=exam, score=score)
     return Response({
         'result': 'passed' if passed else 'failed',
         'score': score,
         'percent': result_percent,
+        'right_answers': right_answers
     }, status=200)
 
 

@@ -6,64 +6,52 @@ export default function ExamResult() {
   const location = useLocation();
   const navigate = useNavigate();
   
-  const { 
-    score, 
-    exam, 
-    totalQuestions, 
-    answeredQuestions, 
-    answers, 
-    questions 
-  } = location.state || {};
+  const { result, exam } = location.state || {};
 
-  if (!location.state) {
+  if (!location.state || !result) {
     navigate('/exams');
     return null;
   }
 
+  const percent = Math.round(result.percent || 0);
+  const correctAnswers = result.right_answers || 0;
+  const score = result.score || 0;
+  const status = result.result;
+
   const getScoreColor = () => {
-    if (score >= 80) return '#10b981';
-    if (score >= 60) return '#f59e0b';
+    if (percent >= 80) return '#10b981';
+    if (percent >= 60) return '#f59e0b';
     return '#ef4444';
   };
 
   const getScoreText = () => {
-    if (score >= 80) return 'Отлично!';
-    if (score >= 60) return 'Хорошо!';
-    if (score >= 40) return 'Удовлетворительно';
-    return 'Нужно улучшить результат';
+    if (status === 'passed') return 'Тест пройден!';
+    if (status === 'failed') return 'Тест не пройден';
+    return percent >= 80 ? 'Отлично!' : percent >= 60 ? 'Хорошо!' : 'Нужно улучшить результат';
   };
 
   const getRecommendation = () => {
-    if (score >= 80) {
+    if (percent >= 80) {
       return 'Превосходный результат! Вы отлично знаете татарский язык на этом уровне.';
     }
-    if (score >= 60) {
+    if (percent >= 60) {
       return 'Хороший результат! Рекомендуем повторить некоторые темы для закрепления.';
     }
-    if (score >= 40) {
+    if (percent >= 40) {
       return 'Удовлетворительный результат. Стоит уделить больше времени изучению материала.';
     }
     return 'Рекомендуем начать с более простого уровня или дополнительно изучить основы.';
   };
 
-  const correctAnswers = questions?.reduce((count, question) => {
-    const userAnswers = answers[question.id] || [];
-    const correctAnswers = question.correct;
-    return JSON.stringify(userAnswers.sort()) === JSON.stringify(correctAnswers.sort()) 
-      ? count + 1 
-      : count;
-  }, 0) || 0;
-
   return (
     <div className="modern-exam-result">
       <div className="result-container">
         <div className="result-header">
-          <div className="result-score-circle" style={{ '--score-color': getScoreColor() }}>
-            <div className="score-number">{score}%</div>
-            <div className="score-text">{getScoreText()}</div>
+          <div style={{ marginBottom: '2rem' }}>
+            <div style={{ fontSize: '3.2rem', fontWeight: 900, color: getScoreColor(), lineHeight: 1, textAlign: 'center' }}>{percent}%</div>
+            <div style={{ fontSize: '1.3rem', fontWeight: 700, color: getScoreColor(), textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.7rem', textAlign: 'center' }}>{getScoreText()}</div>
           </div>
-          
-          <h1 className="result-title">Результаты теста "{exam.title}"</h1>
+          <h1 className="result-title">Результаты теста{exam ? ` "${exam.title}"` : ''}</h1>
           <p className="result-recommendation">{getRecommendation()}</p>
         </div>
 
@@ -88,8 +76,8 @@ export default function ExamResult() {
               </svg>
             </div>
             <div className="stat-content">
-              <div className="stat-number">{answeredQuestions}</div>
-              <div className="stat-label">Вопросов отвечено</div>
+              <div className="stat-number">{score}</div>
+              <div className="stat-label">Баллов</div>
             </div>
           </div>
 
@@ -104,8 +92,8 @@ export default function ExamResult() {
               </svg>
             </div>
             <div className="stat-content">
-              <div className="stat-number">{totalQuestions}</div>
-              <div className="stat-label">Всего вопросов</div>
+              <div className="stat-number">{percent}%</div>
+              <div className="stat-label">Процент выполнения</div>
             </div>
           </div>
         </div>
@@ -113,7 +101,7 @@ export default function ExamResult() {
         <div className="result-progress">
           <h3>Детализация результата</h3>
           <div className="progress-bar-container">
-            <div className="progress-bar" style={{ '--progress': `${score}%`, '--progress-color': getScoreColor() }}>
+            <div className="progress-bar" style={{ '--progress': `${percent}%`, '--progress-color': getScoreColor() }}>
               <div className="progress-fill"></div>
             </div>
             <div className="progress-labels">
@@ -126,70 +114,6 @@ export default function ExamResult() {
           </div>
         </div>
 
-        {questions && (
-          <div className="result-details">
-            <h3>Разбор ответов</h3>
-            <div className="questions-review">
-              {questions.map((question, index) => {
-                const userAnswers = answers[question.id] || [];
-                const isCorrect = JSON.stringify(userAnswers.sort()) === JSON.stringify(question.correct.sort());
-                
-                return (
-                  <div key={question.id} className={`question-review ${isCorrect ? 'correct' : 'incorrect'}`}>
-                    <div className="question-review-header">
-                      <span className="question-review-number">Вопрос {index + 1}</span>
-                      <span className={`question-review-status ${isCorrect ? 'correct' : 'incorrect'}`}>
-                        {isCorrect ? 'Правильно' : 'Неправильно'}
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          {isCorrect ? (
-                            <path d="M20 6L9 17l-5-5"/>
-                          ) : (
-                            <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>
-                          )}
-                        </svg>
-                      </span>
-                    </div>
-                    
-                    <div className="question-review-content">
-                      <p className="question-review-text">{question.question}</p>
-                      
-                      {question.image && (
-                        <div className="question-review-image">
-                          <img src={question.image} alt="Вопрос" />
-                        </div>
-                      )}
-                      
-                      <div className="answer-comparison">
-                        <div className="user-answers">
-                          <h5>Ваш ответ:</h5>
-                          {userAnswers.length > 0 ? (
-                            <ul>
-                              {userAnswers.map(index => (
-                                <li key={index}>{question.options[index]}</li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p className="no-answer">Не отвечено</p>
-                          )}
-                        </div>
-                        
-                        <div className="correct-answers">
-                          <h5>Правильный ответ:</h5>
-                          <ul>
-                            {question.correct.map(index => (
-                              <li key={index}>{question.options[index]}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
         <div className="result-actions">
           <button 
             className="modern-btn modern-btn--secondary"
@@ -200,16 +124,17 @@ export default function ExamResult() {
             </svg>
             Вернуться к тестам
           </button>
-          
-          <button 
-            className="modern-btn modern-btn--primary"
-            onClick={() => navigate(`/exam/${exam.id}`)}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
-            Пройти заново
-          </button>
+          {exam && (
+            <button 
+              className="modern-btn modern-btn--primary"
+              onClick={() => navigate(`/exam/${exam.id}`)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Пройти заново
+            </button>
+          )}
         </div>
       </div>
     </div>

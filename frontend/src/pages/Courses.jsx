@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import CourseCard from '../components/CourseCard/CourseCard';
@@ -81,26 +81,68 @@ const staticEnrollments = [
 ];
 
 export default function Courses() {
-  const { user } = useAuth();
+  const { user, access } = useAuth();
+  const [courses, setCourses] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Получить курсы
+        const coursesRes = await fetch('http://127.0.0.1:8000/api/v1/course/', {
+          headers: access ? { 'Authorization': `Bearer ${access}` } : {},
+        });
+        let coursesData = await coursesRes.json();
+        coursesData = Array.isArray(coursesData) ? coursesData : coursesData.results || [];
+        setCourses(coursesData.length ? coursesData : staticCourses);
+        // Получить записи на курсы (если пользователь залогинен)
+        if (access) {
+          const enrollRes = await fetch('http://127.0.0.1:8000/api/v1/enrollments/', {
+            headers: { 'Authorization': `Bearer ${access}` },
+          });
+          let enrollData = await enrollRes.json();
+          enrollData = Array.isArray(enrollData) ? enrollData : enrollData.results || [];
+          setEnrollments(enrollData.length ? enrollData : staticEnrollments);
+        } else {
+          setEnrollments([]);
+        }
+      } catch (e) {
+        setError('Ошибка загрузки данных');
+        setCourses(staticCourses);
+        setEnrollments(staticEnrollments);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [access]);
 
   const handleDeleteCourse = (courseId) => {
     alert('Функция удаления будет доступна после подключения к API');
   };
 
-  const enrolledCourseIds = staticEnrollments.map(enrollment => enrollment.course);
+  const enrolledCourseIds = enrollments.map(enrollment => enrollment.course);
 
-  const filteredCourses = staticCourses.filter(course => {
+  const filteredCourses = courses.filter(course => {
     const matchesSearch = course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          course.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
     if (activeTab === 'enrolled') {
       return matchesSearch && enrolledCourseIds.includes(course.id);
     }
-    
     return matchesSearch;
   });
+
+  if (loading) {
+    return <div style={{textAlign: 'center', padding: 40}}>Загрузка курсов...</div>;
+  }
+  if (error) {
+    return <div style={{textAlign: 'center', color: 'red', padding: 40}}>{error}</div>;
+  }
 
   return (
     <div className="modern-courses-page">
@@ -135,7 +177,7 @@ export default function Courses() {
             </svg>
           </div>
           <div className="stat-content">
-            <div className="stat-number">{staticCourses.length}</div>
+            <div className="stat-number">{courses.length}</div>
             <div className="stat-label">Всего курсов</div>
           </div>
         </div>
@@ -150,7 +192,7 @@ export default function Courses() {
             </svg>
           </div>
           <div className="stat-content">
-            <div className="stat-number">{staticEnrollments.length}</div>
+            <div className="stat-number">{enrollments.length}</div>
             <div className="stat-label">Записей на курсы</div>
           </div>
         </div>
