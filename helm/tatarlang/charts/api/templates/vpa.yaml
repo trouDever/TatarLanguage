@@ -1,0 +1,29 @@
+{{- with .Values.vpa }}
+{{- if .enabled }}
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: api
+  namespace: {{ $.Values.namespace }}
+  labels:
+    {{- include "api.labels" $ | nindent 4 }}
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api
+  updatePolicy:
+    updateMode: {{ .mode | quote }}
+  resourcePolicy:
+    containerPolicies:
+      - containerName: api
+        controlledResources: ["memory"]
+        controlledValues: RequestsOnly
+        minAllowed:
+          memory: {{ .minMemory }}
+        maxAllowed:
+          memory: {{ .maxMemory }}
+      - containerName: wait-for-postgres
+        mode: "Off"
+{{- end }}
+{{- end }}

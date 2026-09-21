@@ -1,0 +1,132 @@
+namespace: tatarlang
+
+secrets:
+  name: tatarlang-secrets
+  postgresUser: ref+vault://kv/tatarlang/postgres#/user
+  postgresPassword: ref+vault://kv/tatarlang/postgres#/password
+  postgresDb: ref+vault://kv/tatarlang/postgres#/database
+  rabbitUser: ref+vault://kv/tatarlang/rabbitmq#/user
+  rabbitPassword: ref+vault://kv/tatarlang/rabbitmq#/password
+  demoEmail: ref+vault://kv/tatarlang/demo#/email
+  demoPassword: ref+vault://kv/tatarlang/demo#/password
+
+config:
+  name: tatarlang-config
+  postgresHost: db
+  postgresPort: "5432"
+  rabbitHost: rabbitmq
+  rabbitPort: "5672"
+
+ingress:
+  name: tatarlang
+  className: nginx
+  host: tatarlang.local
+  apiPaths:
+    - /api
+    - /admin
+    - /swagger
+    - /redoc
+
+api:
+  namespace: tatarlang
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+  image: tatarlang/backend:dev
+  pullPolicy: IfNotPresent
+  replicas: 2
+  port: 8000
+  workers: 3
+  secretName: tatarlang-secrets
+  configName: tatarlang-config
+  healthPath: /api/v1/events/
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+    cpuUtilization: 75
+    scaleUp:
+      window: 30
+      pods: 2
+      percent: 50
+      period: 60
+    scaleDown:
+      window: 300
+      percent: 25
+      period: 60
+  vpa:
+    enabled: true
+    mode: "Off"
+    minMemory: 128Mi
+    maxMemory: 1Gi
+
+worker:
+  namespace: tatarlang
+  resources:
+    worker:
+      requests:
+        cpu: 50m
+        memory: 192Mi
+      limits:
+        cpu: 300m
+        memory: 384Mi
+    beat:
+      requests:
+        cpu: 20m
+        memory: 96Mi
+      limits:
+        cpu: 100m
+        memory: 192Mi
+  image: tatarlang/backend:dev
+  pullPolicy: IfNotPresent
+  concurrency: 2
+  secretName: tatarlang-secrets
+  configName: tatarlang-config
+
+web:
+  namespace: tatarlang
+  resources:
+    requests:
+      cpu: 10m
+      memory: 16Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+  image: tatarlang/frontend:dev
+  pullPolicy: IfNotPresent
+  replicas: 1
+  port: 80
+
+postgres:
+  namespace: tatarlang
+  resources:
+    requests:
+      cpu: 500m
+      memory: 128Mi
+    limits:
+      cpu: 2000m
+      memory: 512Mi
+  serviceName: db
+  image: postgres:15-alpine
+  port: 5432
+  storage: 2Gi
+  secretName: tatarlang-secrets
+
+rabbitmq:
+  namespace: tatarlang
+  resources:
+    requests:
+      cpu: 100m
+      memory: 192Mi
+    limits:
+      cpu: 500m
+      memory: 384Mi
+  image: rabbitmq:3.13-management-alpine
+  port: 5672
+  managementPort: 15672
+  storage: 1Gi
+  secretName: tatarlang-secrets

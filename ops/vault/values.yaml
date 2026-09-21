@@ -1,0 +1,27 @@
+injector:
+  enabled: false
+
+server:
+  standalone:
+    enabled: true
+    config: |
+      ui = true
+      listener "tcp" {
+        address     = "[::]:8200"
+        tls_disable = 1
+      }
+      storage "file" {
+        path = "/vault/data"
+      }
+  dataStorage:
+    size: 1Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+
+ui:
+  enabled: true

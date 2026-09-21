@@ -1,0 +1,30 @@
+apiVersion: locust.io/v2
+kind: LocustTest
+metadata:
+  name: {{ .Values.test.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  image: {{ .Values.test.image }}
+  testFiles:
+    configMapRef: {{ .Values.test.name }}-scenario
+  env:
+    secretRefs:
+      - name: {{ .Values.credentials.secretName }}
+  master:
+    autostart: true
+    autoquit:
+      enabled: true
+      timeout: 120
+    command: >-
+      --locustfile /lotest/src/locustfile.py
+      --host {{ .Values.test.target }}
+      --users {{ .Values.test.users }}
+      --spawn-rate {{ .Values.test.spawnRate }}
+      --run-time {{ .Values.test.runTime }}
+    resources:
+      {{- toYaml .Values.test.master | nindent 6 }}
+  worker:
+    replicas: {{ .Values.test.workers }}
+    command: --locustfile /lotest/src/locustfile.py
+    resources:
+      {{- toYaml .Values.test.worker | nindent 6 }}

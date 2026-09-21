@@ -1,0 +1,22 @@
+apiVersion: v2
+name: tatarlang
+description: Tatarlang platform
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+dependencies:
+  - name: api
+    version: 0.1.0
+    repository: file://charts/api
+  - name: worker
+    version: 0.1.0
+    repository: file://charts/worker
+  - name: web
+    version: 0.1.0
+    repository: file://charts/web
+  - name: postgres
+    version: 0.1.0
+    repository: file://charts/postgres
+  - name: rabbitmq
+    version: 0.1.0
+    repository: file://charts/rabbitmq

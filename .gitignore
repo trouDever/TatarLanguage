@@ -7,3 +7,4 @@
 /.mypy_cache
 backend/media/*
 10-secret-app.yaml
+loadtest/reports/

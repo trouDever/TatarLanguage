@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.webui.service }}
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    performance-test-pod-name: {{ .Values.test.name }}-master
+  ports:
+    - name: webui
+      port: {{ .Values.webui.port }}
+      targetPort: 8089
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.webui.service }}
+  namespace: {{ .Values.namespace }}
+spec:
+  ingressClassName: {{ .Values.webui.ingress.className }}
+  rules:
+    - host: {{ .Values.webui.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.webui.service }}
+                port:
+                  number: {{ .Values.webui.port }}

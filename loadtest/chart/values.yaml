@@ -1,0 +1,38 @@
+namespace: tatarlang
+
+locustfile: ""
+
+credentials:
+  secretName: loadtest-credentials
+  email: ref+vault://kv/tatarlang/demo#/email
+  password: ref+vault://kv/tatarlang/demo#/password
+
+test:
+  name: load-test-v2
+  image: locustio/locust:2.32.4
+  target: http://api.tatarlang.svc.cluster.local:8000
+  users: 200
+  spawnRate: 10
+  runTime: 3m
+  workers: 3
+  master:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  worker:
+    requests:
+      cpu: 200m
+      memory: 192Mi
+    limits:
+      cpu: 1000m
+      memory: 384Mi
+
+webui:
+  service: load-test-v2-webui
+  port: 8089
+  ingress:
+    className: nginx
+    host: locust.tatarlang.local

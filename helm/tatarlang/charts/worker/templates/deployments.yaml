@@ -1,0 +1,34 @@
+{{- range $role, $cmd := dict "worker" (printf "celery -A tatarlang.celery worker --loglevel=info --concurrency=%v" .Values.concurrency) "beat" "celery -A tatarlang.celery beat --loglevel=info --schedule=/tmp/celerybeat-schedule" }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-{{ $role }}
+  namespace: {{ $.Values.namespace }}
+  labels:
+    app.kubernetes.io/name: celery-{{ $role }}
+    app.kubernetes.io/part-of: tatarlang
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: celery-{{ $role }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: celery-{{ $role }}
+        app.kubernetes.io/part-of: tatarlang
+    spec:
+      containers:
+        - name: {{ $role }}
+          image: {{ $.Values.image }}
+          imagePullPolicy: {{ $.Values.pullPolicy }}
+          command: ["sh", "-c", {{ $cmd | quote }}]
+          resources:
+            {{- toYaml (index $.Values.resources $role) | nindent 12 }}
+          envFrom:
+            - secretRef:
+                name: {{ $.Values.secretName }}
+            - configMapRef:
+                name: {{ $.Values.configName }}
+{{- end }}

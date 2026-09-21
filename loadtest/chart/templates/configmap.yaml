@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.test.name }}-scenario
+  namespace: {{ .Values.namespace }}
+data:
+  locustfile.py: |-
+{{ required "pass the scenario with --set-file locustfile=loadtest/locustfile.py" .Values.locustfile | indent 4 }}
