@@ -1,0 +1,10 @@
+configVersion: 1
+project: tatarlang
+---
+image: backend
+context: backend
+dockerfile: Dockerfile.k8s
+---
+image: frontend
+context: frontend
+dockerfile: Dockerfile.k8s

@@ -1,13 +1,13 @@
 NAMESPACE ?= tatarlang
 RELEASE ?= tatarlang
-CHART ?= helm/tatarlang
+CHART ?= .helm
 PROFILE ?= tatarlang
 LOCUST_USERS ?= 200
 LOCUST_SPAWN ?= 10
 LOCUST_TIME ?= 3m
 EXPORTER_IMAGE ?= containersol/locust_exporter:v0.5.2
 
-.PHONY: images vault deploy status metrics-server vpa locust-operator top loadtest loadtest-cluster
+.PHONY: images vault vault-bootstrap deploy werf status metrics-server vpa locust-operator top loadtest loadtest-cluster
 
 images:
 	eval $$(minikube -p $(PROFILE) docker-env) && \
@@ -17,6 +17,12 @@ images:
 vault:
 	helm repo add hashicorp https://helm.releases.hashicorp.com --force-update
 	helm upgrade --install vault hashicorp/vault -n vault --create-namespace -f ops/vault/values.yaml
+
+vault-bootstrap:
+	./ops/vault/bootstrap.sh
+
+werf:
+	eval $$(minikube -p $(PROFILE) docker-env) && NAMESPACE=$(NAMESPACE) RELEASE=$(RELEASE) ./ops/werf/converge.sh
 
 deploy:
 	@test -n "$$VAULT_ADDR" -a -n "$$VAULT_TOKEN" || { echo "VAULT_ADDR and VAULT_TOKEN are required"; exit 1; }

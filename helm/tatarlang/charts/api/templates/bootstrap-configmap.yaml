@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: api-bootstrap
-  namespace: {{ .Values.namespace }}
-data:
-  seed.py: |-
-{{ .Files.Get "files/seed.py" | indent 4 }}

@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "api.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicas }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "api.labels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "api.labels" . | nindent 8 }}
+    spec:
+      initContainers:
+        {{- include "api.waitForDb" . | nindent 8 }}
+      containers:
+        - name: api
+          image: {{ include "tatarlang.image" (dict "root" . "name" "backend") }}
+          imagePullPolicy: {{ .Values.global.pullPolicy }}
+          command:
+            - gunicorn
+            - tatarlang.wsgi:application
+            - --bind=0.0.0.0:{{ .Values.port }}
+            - --workers={{ .Values.workers }}
+            - --timeout=60
+            - --access-logfile=-
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.global.secretName }}
+            - configMapRef:
+                name: {{ .Values.global.configName }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthPath }}
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthPath }}
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
