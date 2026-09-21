@@ -13,7 +13,13 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-COPY . .
+COPY manage.py ./
+COPY tatarlang ./tatarlang
+COPY api ./api
+COPY users ./users
+COPY organizations ./organizations
+COPY exams ./exams
+COPY events ./events
 
 RUN useradd --create-home --uid 10001 app && chown -R app:app /app
 USER 10001

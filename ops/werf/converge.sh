@@ -42,7 +42,8 @@ secret_args() {
     jq -n -r \
         --argjson pg "$(kv_json postgres)" \
         --argjson mq "$(kv_json rabbitmq)" \
-        --argjson demo "$(kv_json demo)" '
+        --argjson demo "$(kv_json demo)" \
+        --argjson django "$(kv_json django)" '
         {
             "secrets.postgresUser": $pg.user,
             "secrets.postgresPassword": $pg.password,
@@ -50,7 +51,8 @@ secret_args() {
             "secrets.rabbitUser": $mq.user,
             "secrets.rabbitPassword": $mq.password,
             "secrets.demoEmail": $demo.email,
-            "secrets.demoPassword": $demo.password
+            "secrets.demoPassword": $demo.password,
+            "secrets.djangoSecretKey": $django.secret_key
         } | to_entries[] | "--set-string=\(.key)=\(.value)"'
 }
 

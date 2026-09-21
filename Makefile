@@ -2,12 +2,13 @@ NAMESPACE ?= tatarlang
 RELEASE ?= tatarlang
 CHART ?= .helm
 PROFILE ?= tatarlang
+SONAR_URL ?= http://127.0.0.1:19000
 LOCUST_USERS ?= 200
 LOCUST_SPAWN ?= 10
 LOCUST_TIME ?= 3m
 EXPORTER_IMAGE ?= containersol/locust_exporter:v0.5.2
 
-.PHONY: images vault vault-bootstrap deploy werf status metrics-server vpa locust-operator top loadtest loadtest-cluster
+.PHONY: images vault vault-bootstrap deploy werf status metrics-server vpa locust-operator top loadtest loadtest-cluster secrets-scan trivy sonarqube sonarqube-configure sonar-scan
 
 images:
 	eval $$(minikube -p $(PROFILE) docker-env) && \
@@ -65,3 +66,19 @@ loadtest-cluster:
 	helm upgrade --install loadtest loadtest/chart -n $(NAMESPACE) -f $$resolved --reset-values --force-conflicts \
 		--set-file locustfile=loadtest/locustfile.py \
 		--set test.users=$(LOCUST_USERS) --set test.spawnRate=$(LOCUST_SPAWN) --set test.runTime=$(LOCUST_TIME)
+
+secrets-scan:
+	trufflehog git file://. --results=verified,unknown --fail --no-update
+
+trivy:
+	trivy fs --scanners vuln,misconfig,secret --severity HIGH,CRITICAL --skip-dirs frontend/node_modules .
+
+sonarqube:
+	./ops/sonarqube/install.sh
+
+sonarqube-configure:
+	SONAR_URL=$(SONAR_URL) ./ops/sonarqube/configure.sh
+
+sonar-scan:
+	SONAR_TOKEN=$$(vault kv get -field=ci_token kv/tatarlang/sonarqube) \
+	sonar-scanner -Dsonar.host.url=$(SONAR_URL) -Dsonar.qualitygate.wait=true

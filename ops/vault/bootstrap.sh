@@ -13,6 +13,7 @@ vault secrets list -format=json | jq -e '."kv/"' >/dev/null || vault secrets ena
 missing postgres && vault kv put kv/tatarlang/postgres user=tatarlang password="$(secret)" database=tatarlang >/dev/null
 missing rabbitmq && vault kv put kv/tatarlang/rabbitmq user=tatarlang password="$(secret)" >/dev/null
 missing demo && vault kv put kv/tatarlang/demo email=student@tatarlang.local password="$(secret 8)" >/dev/null
+missing django && vault kv put kv/tatarlang/django secret_key="$(openssl rand -base64 48 | tr -d '\n')" >/dev/null
 missing registry && vault kv put kv/tatarlang/registry \
     host="${REGISTRY_HOST:-localhost:5000}" username=tatarlang-ci token="$(secret 16)" insecure="${REGISTRY_INSECURE:-true}" >/dev/null
 

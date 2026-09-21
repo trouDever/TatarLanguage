@@ -9,3 +9,4 @@ backend/media/*
 10-secret-app.yaml
 loadtest/reports/
 .DS_Store
+.scannerwork/

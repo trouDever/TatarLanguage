@@ -1,0 +1,156 @@
+name: security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secrets:
+    name: trufflehog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Scan git history for secrets
+        uses: trufflesecurity/trufflehog@v3.97.5
+        with:
+          extra_args: --results=verified,unknown
+
+  trivy-repo:
+    name: trivy repo
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Scan dependencies, IaC and secrets
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,misconfig,secret
+          severity: HIGH,CRITICAL
+          format: sarif
+          output: trivy-repo.sarif
+          exit-code: "0"
+      - name: Human readable report
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,misconfig,secret
+          severity: HIGH,CRITICAL
+          format: table
+          output: trivy-repo.txt
+          exit-code: "0"
+          skip-setup-trivy: true
+      - uses: actions/upload-artifact@v7
+        with:
+          name: trivy-repo
+          path: |
+            trivy-repo.txt
+            trivy-repo.sarif
+      - name: Publish to code scanning
+        uses: github/codeql-action/upload-sarif@v4
+        continue-on-error: true
+        with:
+          sarif_file: trivy-repo.sarif
+          category: trivy-repo
+
+  trivy-images:
+    name: trivy ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build image
+        run: docker build -t tatarlang/${{ matrix.image }}:${{ github.sha }} -f ${{ matrix.image }}/Dockerfile.k8s ${{ matrix.image }}
+      - name: Full report
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: tatarlang/${{ matrix.image }}:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          format: table
+          output: trivy-${{ matrix.image }}.txt
+          exit-code: "0"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: trivy-${{ matrix.image }}
+          path: trivy-${{ matrix.image }}.txt
+      - name: Gate on fixable critical vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: tatarlang/${{ matrix.image }}:${{ github.sha }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          format: table
+          exit-code: "1"
+          skip-setup-trivy: true
+
+  sonarqube:
+    name: sonarqube
+    runs-on: ubuntu-latest
+    services:
+      sonarqube:
+        image: sonarqube:26.7.0.124771-community
+        env:
+          SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+        ports:
+          - 9000:9000
+    env:
+      SONAR_URL: http://localhost:9000
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Wait for SonarQube
+        run: |
+          for attempt in $(seq 1 60); do
+            curl -fs "$SONAR_URL/api/system/status" | grep -q '"status":"UP"' && exit 0
+            sleep 5
+          done
+          exit 1
+      - name: Configure project and quality gate
+        run: |
+          password="Ci$(openssl rand -hex 12)!"
+          echo "::add-mask::$password"
+          curl -fsS -u admin:admin -X POST "$SONAR_URL/api/users/change_password" \
+            -d login=admin -d previousPassword=admin -d password="$password"
+          echo "SONAR_ADMIN_PASSWORD=$password" >> "$GITHUB_ENV"
+          SONAR_ADMIN_PASSWORD="$password" ./ops/sonarqube/configure.sh
+      - name: Analyze
+        uses: SonarSource/sonarqube-scan-action@v8.2.2
+        env:
+          SONAR_HOST_URL: ${{ env.SONAR_URL }}
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.qualitygate.timeout=300
+      - name: Export findings
+        if: always()
+        run: |
+          curl -fsS -u "admin:$SONAR_ADMIN_PASSWORD" \
+            "$SONAR_URL/api/qualitygates/project_status?projectKey=tatarlang" > sonar-quality-gate.json
+          curl -fsS -u "admin:$SONAR_ADMIN_PASSWORD" \
+            "$SONAR_URL/api/issues/search?componentKeys=tatarlang&ps=500" > sonar-issues.json
+          jq -r '.projectStatus.conditions[] | "\(.status) \(.metricKey) \(.actualValue)"' sonar-quality-gate.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: sonarqube
+          path: sonar-*.json

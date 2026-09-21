@@ -1,0 +1,44 @@
+community:
+  enabled: true
+
+monitoringPasscodeSecretName: sonarqube-monitoring
+monitoringPasscodeSecretKey: passcode
+
+setAdminPassword:
+  passwordSecretName: sonarqube-admin
+
+jdbcOverwrite:
+  enabled: true
+  jdbcUrl: jdbc:postgresql://sonarqube-db:5432/sonarqube
+  jdbcUsername: sonarqube
+  jdbcSecretName: sonarqube-db
+  jdbcSecretPasswordKey: password
+
+sonarProperties:
+  sonar.search.javaOpts: "-Xms512m -Xmx512m -XX:MaxDirectMemorySize=256m"
+  sonar.web.javaOpts: "-Xmx512m"
+  sonar.ce.javaOpts: "-Xmx768m"
+  sonar.forceAuthentication: "true"
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1536Mi
+  limits:
+    cpu: 2000m
+    memory: 3Gi
+
+persistence:
+  enabled: true
+  size: 5Gi
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hosts:
+    - name: sonar.tatarlang.local
+      path: /
+      pathType: Prefix
+
+tests:
+  enabled: false

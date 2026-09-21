@@ -20,6 +20,7 @@ secrets:
   rabbitPassword: ref+vault://kv/tatarlang/rabbitmq#/password
   demoEmail: ref+vault://kv/tatarlang/demo#/email
   demoPassword: ref+vault://kv/tatarlang/demo#/password
+  djangoSecretKey: ref+vault://kv/tatarlang/django#/secret_key
 
 config:
   postgresPort: "5432"
